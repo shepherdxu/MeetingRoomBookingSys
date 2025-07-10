@@ -17,7 +17,8 @@ public class BookingService {
     private final NotificationService notificationService = new NotificationService();
 
     public List<Room> findAvailableRooms(Date startTime, Date endTime) {
-        // ... (代码无变化)
+        // This method finds available rooms based on existing bookings.
+        // It's a read operation and doesn't require explicit concurrency control within itself.
         try (SqlSession session = MyBatisUtil.getSqlSession()) {
             BookingMapper bookingMapper = session.getMapper(BookingMapper.class);
             RoomMapper roomMapper = session.getMapper(RoomMapper.class);
@@ -40,16 +41,28 @@ public class BookingService {
         SqlSession session = MyBatisUtil.getSqlSession(false); // 关闭自动提交
         try {
             BookingMapper bookingMapper = session.getMapper(BookingMapper.class);
-            RoomMapper roomMapper = session.getMapper(RoomMapper.class);
+            RoomMapper roomMapper = session.getMapper(RoomMapper.class); // 尽管这里没有直接使用，但保留以备将来扩展
             UserMapper userMapper = session.getMapper(UserMapper.class);
 
+            // 在当前事务中重新验证会议室的可用性。
+            // 这可以防止在多个用户同时看到房间可用后，尝试预订同一个房间的竞态条件。
+            List<Integer> currentlyBookedRoomIds = bookingMapper.findBookedRoomIds(booking.getStartTime(), booking.getEndTime());
+            if (currentlyBookedRoomIds != null && currentlyBookedRoomIds.contains(booking.getRoomId())) {
+                // 会议室已被其他事务预订，不再可用。
+                session.rollback(); // 回滚当前事务
+                System.err.println("错误：会议室 " + booking.getRoomId() + " 在请求的时间段内已被预订。");
+                // 可以在这里抛出自定义异常或返回更友好的错误信息给前端
+                return false;
+            }
+
             // 对于管理员，可以直接确认。对于员工，设置为待审批
-            User requester = (User) booking.getRequester(); // 假设在Servlet中已设置
+            User requester = booking.getRequester(); // 假设在Servlet中已设置
             if ("admin".equals(requester.getRole())) {
                 booking.setStatus("confirmed");
             } else {
                 booking.setStatus("pending");
             }
+
             // 1. 创建预约
             int affectedRows = bookingMapper.createBooking(booking);
             if (affectedRows == 0) {
@@ -78,7 +91,7 @@ public class BookingService {
             e.printStackTrace();
             return false;
         } finally {
-            session.close();
+            session.close(); // 确保SqlSession被关闭
         }
     }
     // 核心修改：根据管理员部门ID获取待审批列表
