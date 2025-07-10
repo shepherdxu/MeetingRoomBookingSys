@@ -213,9 +213,7 @@
         </nav>
     </aside>
 
-    <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden ml-64">
-        <!-- Header -->
         <header class="h-16 flex items-center justify-between px-6">
             <div id="page-title-container" class="opacity-0 translate-y-2 transition-all duration-500">
                 <h1 class="text-xl font-semibold">${title}</h1>
