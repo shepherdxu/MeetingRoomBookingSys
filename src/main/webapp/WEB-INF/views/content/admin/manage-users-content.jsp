@@ -225,6 +225,44 @@
             background-color: #c53030;
             transform: translateY(-1px);
         }
+
+        /* Custom style for "管理员账号不可删除" text with animations */
+        .admin-disabled-action {
+            background: linear-gradient(90deg, #e0e7ff, #c7d2fe, #e0e7ff); /* Light blue gradient */
+            background-size: 200% 100%; /* Make it wider than the element for animation */
+            color: #4338ca; /* Indigo-700 for text */
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            position: relative; /* For pseudo-element glow */
+            z-index: 1; /* Ensure text is above pseudo-element */
+            display: inline-block; /* Required for padding and background */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        .admin-disabled-action:hover {
+            background-position: -100% 0; /* Animate gradient */
+            box-shadow: 0 4px 15px rgba(67, 56, 202, 0.2); /* Stronger shadow on hover */
+            transform: translateY(-2px);
+        }
+
+        .admin-disabled-action::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: inherit; /* Inherit gradient from parent */
+            filter: blur(10px); /* Apply blur to the pseudo-element */
+            z-index: -1; /* Place behind the text */
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s ease;
+            border-radius: inherit; /* Match parent's border-radius */
+        }
+
+        .admin-disabled-action:hover::before {
+            opacity: 1; /* Show glow on hover */
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 lg:p-12">
@@ -303,14 +341,35 @@
                             </c:if>
                         </td>
                         <td class="px-6 py-4 text-center space-x-2">
-                            <a href="${pageContext.request.contextPath}/admin?action=editUserForm&userId=${u.userId}" class="btn-action btn-edit">编辑</a>
-                            <c:if test="${u.userId != sessionScope.user.userId}">
+                            <c:if test="${u.userId == sessionScope.user.userId}">
+                                <!-- Current user's own account: always show edit/delete -->
+                                <a href="${pageContext.request.contextPath}/admin?action=editUserForm&userId=${u.userId}" class="btn-action btn-edit">编辑</a>
                                 <span class="text-gray-300">|</span>
                                 <form action="${pageContext.request.contextPath}/admin" method="post" class="inline" onsubmit="return showConfirmDialog(event, '${u.fullName}')">
                                     <input type="hidden" name="action" value="deleteUser">
                                     <input type="hidden" name="userId" value="${u.userId}">
                                     <button type="submit" class="btn-action btn-delete">删除</button>
                                 </form>
+                            </c:if>
+                            <c:if test="${u.userId != sessionScope.user.userId}">
+                                <c:choose>
+                                    <c:when test="${u.role == 'admin'}">
+                                        <!-- Other admin accounts: show "不可删除" with animations -->
+                                        <span class="admin-disabled-action px-3 py-1.5 rounded-md text-sm font-medium relative overflow-hidden">
+                                            管理员账号不可删除
+                                        </span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <!-- Other non-admin accounts: show edit/delete -->
+                                        <a href="${pageContext.request.contextPath}/admin?action=editUserForm&userId=${u.userId}" class="btn-action btn-edit">编辑</a>
+                                        <span class="text-gray-300">|</span>
+                                        <form action="${pageContext.request.contextPath}/admin" method="post" class="inline" onsubmit="return showConfirmDialog(event, '${u.fullName}')">
+                                            <input type="hidden" name="action" value="deleteUser">
+                                            <input type="hidden" name="userId" value="${u.userId}">
+                                            <button type="submit" class="btn-action btn-delete">删除</button>
+                                        </form>
+                                    </c:otherwise>
+                                </c:choose>
                             </c:if>
                         </td>
                     </tr>

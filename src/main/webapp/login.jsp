@@ -218,8 +218,6 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center py-4">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-        </div>
         <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient bg-[length:200%_auto] filter blur-[0.5px] inline-block">
           会议室预约管理系统
         </h1>
