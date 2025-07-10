@@ -11,6 +11,14 @@
     <!-- 引入 Inter 字体 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        @keyframes gradientShift {
+            0% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+            100% { background-position: 0% center; }
+        }
+        .animate-gradient {
+            animation: gradientShift 3s ease infinite;
+        }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f4f7f6; /* Light background for the page */
@@ -220,10 +228,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md transform transition-transform duration-300 hover:scale-110">
-                    <span class="text-white font-bold text-lg">会</span>
-                </div>
-                <h1 class="text-2xl font-bold text-gray-900">会议室预约管理系统</h1>
+                <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient bg-[length:200%_auto] filter blur-[0.5px] inline-block">
+                    会议室预约管理系统
+                </h1>
             </div>
             <nav class="hidden md:flex space-x-8">
                 <a href="index.jsp" class="px-3 py-2 rounded-lg transition-all duration-300 bg-blue-100 text-blue-700 hover:bg-blue-200">
