@@ -1,3 +1,11 @@
+/**
+* Meeting Room Booking System - User Model.
+* @author Kyochilian
+* @version 6.0
+* @since 1.0
+* @date 2025-7-10 20:49
+* This class represents a user in the system. It contains the user's information, such as their username, password hash, full name, role, and department. It also has a foreign key to the department table, which is used to determine which department the user belongs to.
+* */
 package com.yourcompany.model;
 
 public class User {

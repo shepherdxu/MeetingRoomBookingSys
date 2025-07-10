@@ -1,3 +1,8 @@
+
+<%--    Copyright 2025, The Ningxia University, Ningxia, China. @KyochiLian All rights reserved.--%>
+<%--    This project is licensed under the Apache License, Version 2.0, see LICENSE for details.--%>
+<%--    @Author: KyochiLian--%>
+
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>

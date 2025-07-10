@@ -1,3 +1,11 @@
+/**
+* Meeting Room Booking System - Admin Dashboard Service
+* @author Kyochilian
+* @version 6.0
+* @since 1.0
+* @date 2025-7-10
+* this class provides methods to retrieve data for the admin dashboard page.
+* */
 package com.yourcompany.service;
 
 import com.google.gson.Gson;

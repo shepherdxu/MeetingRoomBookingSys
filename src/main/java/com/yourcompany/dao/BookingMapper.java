@@ -1,3 +1,11 @@
+/**
+ * Meeting Room Booking System - DAO Interface for Booking Operations.
+ * This interface defines the methods for interacting with the 'bookings' and 'booking_attendees' tables.
+ * @author Kyochilian(invictus&Shepherd).
+ * @version 6.1.0.
+ * @since 1.0.0.
+ * @date 2025-7-10.
+ * **/
 package com.yourcompany.dao;
 
 import com.yourcompany.model.Booking;

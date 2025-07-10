@@ -1,3 +1,10 @@
+/**
+ * @author: Kyochilian&invictus
+ * @version: 6.0
+ * @Kyochilian All rights reserved.
+ * @date: 2025-7-10 20:30
+ * This soft package is created for the purpose of handling the admin actions.
+ * **/
 package com.yourcompany.controller;
 
 import com.yourcompany.model.Booking;
