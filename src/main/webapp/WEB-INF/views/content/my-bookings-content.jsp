@@ -118,7 +118,7 @@
                     <div class="ml-3">
                         <p class="text-sm text-blue-700">
                             <i class="fa fa-check-circle mr-1"></i>
-                            您的预约已提交，请等待管理员审批。
+                            您的预约已提交，请等待管理员审批
                         </p>
                     </div>
                 </div>
