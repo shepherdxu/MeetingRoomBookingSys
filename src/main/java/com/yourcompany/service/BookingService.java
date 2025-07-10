@@ -51,7 +51,6 @@ public class BookingService {
                 // 会议室已被其他事务预订，不再可用。
                 session.rollback(); // 回滚当前事务
                 System.err.println("错误：会议室 " + booking.getRoomId() + " 在请求的时间段内已被预订。");
-                // 可以在这里抛出自定义异常或返回更友好的错误信息给前端
                 return false;
             }
 

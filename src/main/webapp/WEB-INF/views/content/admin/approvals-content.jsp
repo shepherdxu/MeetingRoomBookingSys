@@ -205,80 +205,80 @@
 </div>
 
 <div class="container mx-auto space-y-8 relative z-0">
-    <!-- Viz & Pending Table -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white p-8 rounded-lg shadow-md content-card-enhanced">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">待审批的预约</h2>
-            <c:if test="${param.message == 'approved'}">
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-6 alert" role="alert">
-                    操作成功：预约已批准。
-                </div>
-            </c:if>
-            <c:if test="${param.message == 'rejected'}">
-                <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg relative mb-6 alert" role="alert">
-                    操作成功：预约已拒绝。
-                </div>
-            </c:if>
-            <div class="overflow-x-auto table-wrapper">
-                <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3">申请人</th>
-                        <th class="px-6 py-3">主题</th>
-                        <th class="px-6 py-3">开始时间</th>
-                        <th class="px-6 py-3">结束时间</th>
-                        <th class="px-6 py-3 text-center">操作</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <c:forEach var="booking" items="${pendingBookings}">
-                        <tr class="bg-white border-b hover:bg-gray-50 table-row-hover">
-                            <td class="px-6 py-4">${booking.requester.fullName}</td>
-                            <td class="px-6 py-4 font-medium text-gray-900">
-                                    ${booking.title}
-                                <div class="text-xs text-gray-500">${booking.room.roomName}</div>
-                            </td>
-                            <td class="px-6 py-4"><fmt:formatDate value="${booking.startTime}" pattern="MM-dd HH:mm"/></td>
-                            <td class="px-6 py-4"><fmt:formatDate value="${booking.endTime}" pattern="MM-dd HH:mm"/></td>
-                            <td class="px-6 py-4 text-center space-x-2">
-                                <form action="${pageContext.request.contextPath}/admin" method="post" class="inline">
-                                    <input type="hidden" name="action" value="approve"/>
-                                    <input type="hidden" name="bookingId" value="${booking.bookingId}"/>
-                                    <button type="submit" class="btn-action btn-approve">批准</button>
-                                </form>
-                                <span class="text-gray-300">|</span>
-                                <form action="${pageContext.request.contextPath}/admin" method="post" class="inline">
-                                    <input type="hidden" name="action" value="reject"/>
-                                    <input type="hidden" name="bookingId" value="${booking.bookingId}"/>
-                                    <button type="submit" class="btn-action btn-reject">拒绝</button>
-                                </form>
-                            </td>
-                        </tr>
-                    </c:forEach>
-                    <c:if test="${empty pendingBookings}">
-                        <tr>
-                            <td colspan="5" class="text-center py-10 text-gray-500">当前没有待审批的预约。</td>
-                        </tr>
-                    </c:if>
-                    </tbody>
-                </table>
+    <!-- Summary Cards Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-md content-card-enhanced">
+            <h4 class="text-sm font-semibold text-gray-500 mb-2">当前待审批总数</h4>
+            <p class="text-3xl font-bold text-gray-800">${viz.pendingCount}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md content-card-enhanced">
+            <h4 class="text-sm font-semibold text-gray-500 mb-2">待审批总时长 (小时)</h4>
+            <p class="text-3xl font-bold text-gray-800"><fmt:formatNumber value="${viz.pendingTotalHours}" maxFractionDigits="1"/></p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md content-card-enhanced">
+            <h4 class="text-sm font-semibold text-gray-500 mb-2">全公司审批状态</h4>
+            <div class="chart-container">
+                <canvas id="approvalStatusPieChart"></canvas>
             </div>
         </div>
-        <div class="lg:col-span-1 space-y-6">
-            <div class="bg-white p-6 rounded-lg shadow-md content-card-enhanced">
-                <h4 class="text-sm font-semibold text-gray-500 mb-2">当前待审批总数</h4>
-                <p class="text-3xl font-bold text-gray-800">${viz.pendingCount}</p>
+    </div>
+
+    <!-- Pending Bookings Table -->
+    <div class="bg-white p-8 rounded-lg shadow-md content-card-enhanced">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">待审批的预约</h2>
+        <c:if test="${param.message == 'approved'}">
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-6 alert" role="alert">
+                操作成功：预约已批准。
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md content-card-enhanced">
-                <h4 class="text-sm font-semibold text-gray-500 mb-2">待审批总时长 (小时)</h4>
-                <p class="text-3xl font-bold text-gray-800"><fmt:formatNumber value="${viz.pendingTotalHours}" maxFractionDigits="1"/></p>
+        </c:if>
+        <c:if test="${param.message == 'rejected'}">
+            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg relative mb-6 alert" role="alert">
+                操作成功：预约已拒绝。
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md content-card-enhanced">
-                <h4 class="text-sm font-semibold text-gray-500 mb-2">全公司审批状态</h4>
-                <div class="chart-container">
-                    <canvas id="approvalStatusPieChart"></canvas>
-                </div>
-            </div>
+        </c:if>
+        <div class="overflow-x-auto table-wrapper">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3">申请人</th>
+                    <th class="px-6 py-3">主题</th>
+                    <th class="px-6 py-3">开始时间</th>
+                    <th class="px-6 py-3">结束时间</th>
+                    <th class="px-6 py-3 text-center">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <c:forEach var="booking" items="${pendingBookings}">
+                    <tr class="bg-white border-b hover:bg-gray-50 table-row-hover">
+                        <td class="px-6 py-4">${booking.requester.fullName}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">
+                                ${booking.title}
+                            <div class="text-xs text-gray-500">${booking.room.roomName}</div>
+                        </td>
+                        <td class="px-6 py-4"><fmt:formatDate value="${booking.startTime}" pattern="MM-dd HH:mm"/></td>
+                        <td class="px-6 py-4"><fmt:formatDate value="${booking.endTime}" pattern="MM-dd HH:mm"/></td>
+                        <td class="px-6 py-4 text-center space-x-2">
+                            <form action="${pageContext.request.contextPath}/admin" method="post" class="inline">
+                                <input type="hidden" name="action" value="approve"/>
+                                <input type="hidden" name="bookingId" value="${booking.bookingId}"/>
+                                <button type="submit" class="btn-action btn-approve">批准</button>
+                            </form>
+                            <span class="text-gray-300">|</span>
+                            <form action="${pageContext.request.contextPath}/admin" method="post" class="inline">
+                                <input type="hidden" name="action" value="reject"/>
+                                <input type="hidden" name="bookingId" value="${booking.bookingId}"/>
+                                <button type="submit" class="btn-action btn-reject">拒绝</button>
+                            </form>
+                        </td>
+                    </tr>
+                </c:forEach>
+                <c:if test="${empty pendingBookings}">
+                    <tr>
+                        <td colspan="5" class="text-center py-10 text-gray-500">当前没有待审批的预约。</td>
+                    </tr>
+                </c:if>
+                </tbody>
+            </table>
         </div>
     </div>
 
