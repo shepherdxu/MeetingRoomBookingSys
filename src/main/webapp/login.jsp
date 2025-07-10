@@ -235,8 +235,8 @@
   <div class="max-w-md mx-auto">
     <div class="bg-white rounded-2xl shadow-xl p-8 login-card-enhanced">
       <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <span class="text-white text-2xl font-bold">登</span>
+        <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <span class="text-white text-2xl font-bold">👥</span>
         </div>
         <h2 class="text-2xl font-bold text-gray-900">系统登录</h2>
         <c:if test="${not empty message}">
