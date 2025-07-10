@@ -176,9 +176,8 @@
 <div class="flex h-screen">
     <!-- Sidebar -->
     <aside class="w-64 flex flex-col fixed h-full z-10">
-        <div class="h-16 flex items-center justify-center text-gray-800 text-xl font-bold border-b border-gray-200 relative group overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-blue-400/30 via-purple-500/40 to-indigo-600/30 group-hover:opacity-100 opacity-80 transition-all duration-1000 animate-[pulse_3s_ease-in-out_infinite]"></div>
-            <span class="relative z-10 shine-effect">会议室预约管理系统</span>
+        <div class="h-16 flex items-center justify-center text-gray-800 text-xl font-bold border-b border-gray-200 shine-effect">
+            <span class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient bg-[length:200%_auto] filter blur-[0.5px] inline-block">会议室预约管理系统</span>
         </div>
 
         <nav id="main-nav" class="flex-1 px-4 py-4 space-y-1">
