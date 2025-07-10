@@ -1,0 +1,29 @@
+body { font-family: Arial, sans-serif; margin: 0; background-color: #f9f9f9; }
+.admin-container { display: flex; }
+.admin-nav { width: 200px; background-color: #4a5568; color: white; min-height: calc(100vh - 50px); /* 减去header高度 */ }
+.admin-nav ul { list-style-type: none; padding: 0; margin: 0; }
+.admin-nav ul li a { display: block; color: white; padding: 15px 20px; text-decoration: none; }
+.admin-nav ul li a:hover { background-color: #2d3748; }
+.admin-content { flex-grow: 1; padding: 20px; }
+.content-header { display: flex; justify-content: space-between; align-items: center; }
+h2 { color: #333; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+th { background-color: #f2f2f2; }
+tr:hover { background-color: #f5f5f5; }
+.message { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+.message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; color: white; display: inline-block; }
+.btn-approve { background-color: #28a745; }
+.btn-approve:hover { background-color: #218838; }
+.btn-reject { background-color: #dc3545; }
+.btn-reject:hover { background-color: #c82333; }
+.btn-edit { background-color: #ffc107; color: #212529; }
+.btn-edit:hover { background-color: #e0a800; }
+.btn-cancel { background-color: #6c757d; }
+.btn-cancel:hover { background-color: #5a6268; }
+td.actions form { margin-right: 5px; }
+.form-styled { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 20px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+.form-group input[type="text"], .form-group input[type="number"], .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }

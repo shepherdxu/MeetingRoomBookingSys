@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- RoomMapper.xml -->
+<mapper namespace="com.yourcompany.dao.RoomMapper">
+
+    <!-- Result map for Room objects, including an association to Location -->
+    <resultMap id="RoomResultMap" type="Room">
+        <id property="roomId" column="room_id"/>
+        <result property="roomName" column="room_name"/>
+        <result property="capacity" column="capacity"/>
+        <result property="amenities" column="amenities"/>
+        <result property="locationId" column="location_id"/>
+        <!-- Association to the Location object -->
+        <association property="location" javaType="Location">
+            <id property="locationId" column="location_id"/>
+            <result property="locationName" column="location_name"/>
+            <result property="description" column="location_description"/>
+        </association>
+    </resultMap>
+    <resultMap id="RoomWithLocation" type="com.yourcompany.model.Room">
+        <id property="roomId" column="room_id"/>
+        <result property="roomName" column="room_name"/>
+        <result property="capacity" column="capacity"/>
+        <result property="amenities" column="amenities"/>
+        <association property="location" javaType="com.yourcompany.model.Location">
+            <id property="locationId" column="location_id"/>
+            <result property="locationName" column="location_name"/>
+        </association>
+    </resultMap>
+
+    <!-- SQL to insert a new room. useGeneratedKeys and keyProperty are for retrieving the auto-generated ID. -->
+    <insert id="createRoom" useGeneratedKeys="true" keyProperty="roomId">
+        INSERT INTO rooms (room_name, capacity, amenities, location_id)
+        VALUES (#{roomName}, #{capacity}, #{amenities}, #{locationId})
+    </insert>
+    <update id="updateBookingStatus">
+        UPDATE bookings SET status = #{status} = NOW() WHERE booking_id = #{bookingId}
+    </update>
+
+    <!-- SQL to find a room by its ID, joining with locations to get location name -->
+    <select id="findById" resultMap="RoomResultMap">
+        SELECT
+        r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+        l.location_name, l.description as location_description
+        FROM rooms r
+        JOIN locations l ON r.location_id = l.location_id
+        WHERE r.room_id = #{roomId}
+    </select>
+
+    <!-- SQL to retrieve all rooms, joining with locations to get location name -->
+    <select id="findAll" resultMap="RoomResultMap">
+        SELECT
+        r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+        l.location_name, l.description as location_description
+        FROM rooms r
+        JOIN locations l ON r.location_id = l.location_id
+        ORDER BY r.room_name
+    </select>
+    <!-- SQL to update an existing room's details -->
+    <update id="updateRoom">
+        UPDATE rooms SET
+        room_name = #{roomName},
+        capacity = #{capacity},
+        amenities = #{amenities},
+        location_id = #{locationId}
+        WHERE room_id = #{roomId}
+    </update>
+    <sql id="roomSelect">
+        SELECT r.*, l.location_name
+        FROM rooms r
+                 LEFT JOIN locations l ON r.location_id = l.location_id
+    </sql>
+    <!-- SQL to delete a room by its ID -->
+    <delete id="deleteRoom">
+        DELETE FROM rooms WHERE room_id = #{roomId}
+    </delete>
+    <select id="findAllWithSearch" resultMap="RoomWithLocation">
+        <include refid="roomSelect"/>
+        <where>
+            <if test="searchName != null and searchName != ''">
+                r.room_name LIKE CONCAT('%', #{searchName}, '%')
+            </if>
+            <if test="locationId != null and locationId > 0">
+                AND r.location_id = #{locationId}
+            </if>
+        </where>
+        ORDER BY r.room_id
+    </select>
+    <!-- SQL to retrieve all locations -->
+    <select id="findAllLocations" resultType="Location">
+        SELECT location_id, location_name, description FROM locations ORDER BY location_name
+    </select>
+    <select id="findAvailableRooms" resultMap="RoomWithLocation">
+        <include refid="roomSelect"/>
+        WHERE r.room_id NOT IN (
+        SELECT DISTINCT room_id
+        FROM bookings
+        WHERE status IN ('confirmed', 'pending')
+        AND start_time &lt; #{endTime}
+        AND end_time &gt; #{startTime}
+        )
+    </select>
+
+    <!-- SQL to count rooms per location -->
+    <select id="countRoomsByLocation" resultType="map">
+        SELECT
+        l.location_name as locationName,
+        COUNT(r.room_id) as roomCount
+        FROM rooms r
+        JOIN locations l ON r.location_id = l.location_id
+        GROUP BY l.location_name
+        ORDER BY l.location_name
+    </select>
+
+
+    <!-- SQL to calculate the total capacity of all rooms -->
+    <select id="sumTotalCapacity" resultType="int">
+        SELECT COALESCE(SUM(capacity), 0) FROM rooms
+    </select>
+
+    <!-- SQL to retrieve all amenity strings from all rooms -->
+    <select id="findAllAmenitiesStrings" resultType="string">
+        SELECT amenities FROM rooms WHERE amenities IS NOT NULL AND amenities != ''
+    </select>
+
+    <!-- SQL to count the total number of rooms -->
+    <select id="countTotalRooms" resultType="int">
+        SELECT COUNT(*) FROM rooms
+    </select>
+    <select id="countTotalApprovedToday" resultType="int">
+        SELECT COUNT(*) FROM bookings WHERE status = 'confirmed' AND DATE(start_time) = CURDATE()
+    </select>
+    <select id="countTotalProcessedToday" resultType="int">
+        SELECT COUNT(*) FROM bookings WHERE status IN ('confirmed', 'rejected')
+    </select>
+    <select id="getDailyBookingCounts" resultType="java.util.HashMap">
+        SELECT DATE(created_at) as date, COUNT(*) as count FROM bookings
+        WHERE created_at >= CURDATE() - INTERVAL 7 DAY
+        GROUP BY DATE(created_at) ORDER BY date ASC
+    </select>
+    <select id="getPendingBookingStats" resultType="java.util.HashMap">
+        SELECT COUNT(*) as count, COALESCE(SUM(TIMESTAMPDIFF(HOUR, start_time, end_time)), 0) as total_hours
+        FROM bookings WHERE status = 'pending'
+    </select>
+    <insert id="createBooking" useGeneratedKeys="true" keyProperty="bookingId">
+        INSERT INTO bookings (title, start_time, end_time, status, room_id, requester_id, notes, created_at)
+        VALUES (#{title}, #{startTime}, #{endTime}, #{status}, #{roomId}, #{requesterId}, #{notes}, NOW())
+    </insert>
+    <insert id="addAttendees">
+        INSERT INTO booking_attendees (booking_id, user_id) VALUES
+        <foreach collection="userIds" item="userId" separator=",">
+            (#{bookingId}, #{userId})
+        </foreach>
+    </insert>
+    <select id="findBookedRoomIds" resultType="int">
+        SELECT DISTINCT room_id FROM bookings
+        WHERE status IN ('confirmed', 'pending') AND start_time &lt; #{endTime} AND end_time &gt; #{startTime}
+    </select>
+    <select id="countTodaysBookings" resultType="int">
+        SELECT COUNT(*) FROM bookings WHERE DATE(start_time) = CURDATE() AND status = 'confirmed'
+    </select>
+    <select id="countPendingBookings" resultType="int">
+        SELECT COUNT(*) FROM bookings WHERE status = 'pending'
+    </select>
+    <select id="findRoomsInUseNow" resultType="int">
+        SELECT DISTINCT room_id FROM bookings WHERE status = 'confirmed' AND NOW() BETWEEN start_time AND end_time
+    </select>
+    <update id="cancelBooking">
+        UPDATE bookings SET status = 'cancelled'
+        WHERE booking_id = #{bookingId} AND requester_id = #{userId}
+    </update>
+</mapper>

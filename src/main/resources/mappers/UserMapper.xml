@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- UserMapper.xml -->
+<mapper namespace="com.yourcompany.dao.UserMapper">
+
+    <!-- Result map for User objects, including an association to Department -->
+    <resultMap id="UserResultMap" type="User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="fullName" column="full_name"/>
+        <result property="role" column="role"/>
+        <result property="departmentId" column="department_id"/>
+        <!-- Association to the Department object -->
+        <association property="department" javaType="com.yourcompany.model.Department">
+            <id property="departmentId" column="department_id"/>
+            <result property="departmentName" column="department_name"/>
+        </association>
+    </resultMap>
+    <resultMap id="UserWithDeptMap" type="User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="fullName" column="full_name"/>
+        <result property="role" column="role"/>
+        <association property="department" javaType="Department">
+            <id property="departmentId" column="department_id"/>
+            <result property="departmentName" column="department_name"/>
+        </association>
+    </resultMap>
+
+    <!-- SQL to find a user by their username -->
+    <select id="findByUsername" resultMap="UserResultMap">
+        SELECT
+        u.user_id, u.username, u.password_hash, u.full_name, u.role, u.department_id,
+        d.department_name
+        FROM users u
+        LEFT JOIN departments d ON u.department_id = d.department_id
+        WHERE u.username = #{username}
+    </select>
+
+    <!-- SQL to find a user by their ID -->
+    <select id="findById" resultMap="UserResultMap">
+        SELECT
+        u.user_id, u.username, u.password_hash, u.full_name, u.role, u.department_id,
+        d.department_name
+        FROM users u
+        LEFT JOIN departments d ON u.department_id = d.department_id
+        WHERE u.user_id = #{userId}
+    </select>
+    <select id="findAll" resultMap="UserResultMap">
+        SELECT u.*, d.department_name
+        FROM users u
+                 LEFT JOIN departments d ON u.department_id = d.department_id
+        ORDER BY u.user_id
+    </select>
+    <select id="findAllAdmins" resultType="User">
+        SELECT * FROM users WHERE role = 'admin'
+    </select>
+
+    <!-- SQL to find all users, including department name. Used for admin user management. -->
+    <select id="findAllUsers" resultMap="UserResultMap">
+        SELECT
+        u.user_id, u.username, u.password_hash, u.full_name, u.role, u.department_id,
+        d.department_name
+        FROM users u
+        LEFT JOIN departments d ON u.department_id = d.department_id
+        ORDER BY u.user_id
+    </select>
+
+    <!-- SQL to find all employees (users with role 'employee').
+         Only fetches user_id and full_name, useful for attendee selection. -->
+    <select id="findAllEmployees" resultType="User">
+        SELECT user_id, full_name
+        FROM users
+        WHERE role = 'employee'
+        ORDER BY full_name
+    </select>
+
+    <!-- SQL to insert a new user. useGeneratedKeys and keyProperty are for retrieving the auto-generated ID. -->
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users (username, password_hash, full_name, role, department_id)
+        VALUES (#{username}, #{passwordHash}, #{fullName}, #{role}, #{departmentId})
+    </insert>
+
+    <!-- SQL to update an existing user's details (excluding password) -->
+    <update id="updateUser">
+        UPDATE users SET
+        full_name = #{fullName},
+        username = #{username},
+        department_id = #{departmentId},
+        role = #{role}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- SQL to update the password hash for a specific user -->
+    <update id="updatePassword">
+        UPDATE users SET password_hash = #{passwordHash} WHERE user_id = #{userId}
+    </update>
+
+    <!-- SQL to delete a user by their ID -->
+    <delete id="deleteUser">
+        DELETE FROM users WHERE user_id = #{userId}
+    </delete>
+
+    <!-- Dashboard Query: Counts the total number of users -->
+    <select id="countUsers" resultType="int">
+        SELECT COUNT(*) FROM users
+    </select>
+
+    <!-- Dashboard Query: Counts users by department -->
+    <select id="countUsersByDepartment" resultType="java.util.HashMap">
+        SELECT d.department_name as name, COUNT(u.user_id) as value
+        FROM departments d
+        LEFT JOIN users u ON d.department_id = u.department_id
+        GROUP BY d.department_id, d.department_name
+        ORDER BY value DESC
+    </select>
+
+    <!-- Dashboard Query: Counts users by role -->
+    <select id="countUsersByRole" resultType="java.util.HashMap">
+        SELECT role as name, COUNT(*) as value
+        FROM users
+        GROUP BY role
+    </select>
+    <sql id="userSelect">
+        SELECT u.*, d.department_name
+        FROM users u
+                 LEFT JOIN departments d ON u.department_id = d.department_id
+    </sql>
+
+
+</mapper>

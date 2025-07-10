@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- LocationMapper.xml -->
+<mapper namespace="com.yourcompany.dao.LocationMapper">
+
+    <!-- Result map for Location objects -->
+    <resultMap id="LocationResultMap" type="Location">
+        <id property="locationId" column="location_id"/>
+        <result property="locationName" column="location_name"/>
+    </resultMap>
+
+    <!-- SQL to find all locations -->
+    <select id="findAll" resultMap="LocationResultMap">
+        SELECT location_id, location_name
+        FROM locations
+        ORDER BY location_name
+    </select>
+</mapper>

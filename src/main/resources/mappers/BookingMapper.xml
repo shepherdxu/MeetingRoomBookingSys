@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- BookingMapper.xml -->
+<mapper namespace="com.yourcompany.dao.BookingMapper">
+
+    <!-- Result map for Booking objects, including associations to Room and User (requester) -->
+    <resultMap id="BookingDetailResultMap" type="Booking">
+        <id property="bookingId" column="booking_id"/>
+        <result property="title" column="title"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="status" column="status"/>
+        <result property="notes" column="notes"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="requesterId" column="requester_id"/>
+        <!-- Association to the Room object -->
+        <association property="room" javaType="Room">
+            <id property="roomId" column="room_id"/>
+            <result property="roomName" column="room_name"/>
+            <result property="capacity" column="capacity"/>
+            <result property="amenities" column="amenities"/>
+            <result property="locationId" column="location_id"/>
+        </association>
+        <!-- Association to the User object (requester) -->
+        <association property="requester" javaType="User">
+            <id property="userId" column="requester_id"/>
+            <result property="fullName" column="requester_name"/>
+            <result property="username" column="requester_username"/>
+        </association>
+        <!-- Collection for attendees -->
+        <collection property="attendees" ofType="User">
+            <id property="userId" column="attendee_user_id"/>
+            <result property="fullName" column="attendee_full_name"/>
+            <result property="username" column="attendee_username"/>
+        </collection>
+    </resultMap>
+    <insert id="addSelectedAmenities">
+        INSERT INTO booking_selected_amenities (booking_id, amenity_name) VALUES
+        <foreach collection="amenities" item="amenity" separator=",">
+            (#{bookingId}, #{amenity})
+        </foreach>
+    </insert>
+    <!-- SQL to insert a new booking. useGeneratedKeys and keyProperty are for retrieving the auto-generated ID. -->
+    <insert id="createBooking" useGeneratedKeys="true" keyProperty="bookingId">
+        INSERT INTO bookings (title, start_time, end_time, status, room_id, requester_id, notes)
+        VALUES (#{title}, #{startTime}, #{endTime}, #{status}, #{roomId}, #{requesterId}, #{notes})
+    </insert>
+
+    <!-- SQL to insert multiple attendees for a booking.
+         The <foreach> loop iterates over the 'userIds' list to create multiple VALUES clauses. -->
+    <insert id="addAttendees">
+        INSERT INTO booking_attendees (booking_id, user_id) VALUES
+        <foreach collection="userIds" item="userId" separator=",">
+            (#{bookingId}, #{userId})
+        </foreach>
+    </insert>
+
+    <!-- SQL to find distinct room IDs that are booked within a given time range.
+         Checks for 'confirmed' or 'pending' statuses and overlapping times. -->
+    <select id="findBookedRoomIds" resultType="int">
+        SELECT DISTINCT room_id
+        FROM bookings
+        WHERE status IN ('confirmed', 'pending')
+        AND start_time &lt; #{endTime}
+        AND end_time &gt; #{startTime}
+    </select>
+
+    <!-- SQL to update the status of a specific booking -->
+    <update id="updateBookingStatus">
+        UPDATE bookings SET status = #{status} WHERE booking_id = #{bookingId}
+    </update>
+
+    <!-- SQL to cancel a booking by setting its status to 'cancelled'.
+         Includes a check for requester_id for security. -->
+    <update id="cancelBooking">
+        UPDATE bookings
+        SET status = 'cancelled'
+        WHERE booking_id = #{bookingId} AND requester_id = #{userId}
+    </update>
+
+    <!-- Dashboard Query: Counts the number of confirmed bookings for today. -->
+    <select id="countTodaysBookings" resultType="int">
+        SELECT COUNT(*) FROM bookings WHERE DATE(start_time) = CURDATE() AND status = 'confirmed'
+    </select>
+
+    <!-- Dashboard Query: Counts the number of bookings with 'pending' status. -->
+    <select id="countPendingBookings" resultType="int">
+        SELECT COUNT(*) FROM bookings WHERE status = 'pending'
+    </select>
+
+    <!-- Dashboard Query: Finds the IDs of rooms that are currently in use (confirmed status and current time is within booking range). -->
+    <select id="findRoomsInUseNow" resultType="int">
+        SELECT DISTINCT room_id FROM bookings WHERE status = 'confirmed' AND NOW() BETWEEN start_time AND end_time
+    </select>
+
+    <!-- Dashboard Query: Retrieves a list of confirmed bookings for today, including room and requester details. -->
+    <select id="findTodaysBookings" resultMap="BookingDetailResultMap">
+        SELECT
+        b.booking_id, b.title, b.start_time, b.end_time, b.status, b.notes, b.created_at,
+        r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+        u.user_id as requester_id, u.full_name as requester_name, u.username as requester_username
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN users u ON b.requester_id = u.user_id
+        WHERE DATE(b.start_time) = CURDATE() AND b.status = 'confirmed'
+        ORDER BY b.start_time ASC
+    </select>
+
+    <!-- Query: Finds bookings by a specific user ID.
+         Joins with rooms, users, and booking_attendees tables to fetch detailed information. -->
+    <select id="findByUserId" resultMap="BookingDetailResultMap">
+        SELECT
+        b.booking_id, b.title, b.start_time, b.end_time, b.status, b.notes, b.created_at,
+        r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+        u.user_id as requester_id, u.full_name as requester_name, u.username as requester_username,
+        ba.user_id as attendee_user_id, ua.full_name as attendee_full_name, ua.username as attendee_username
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN users u ON b.requester_id = u.user_id
+        LEFT JOIN booking_attendees ba ON b.booking_id = ba.booking_id
+        LEFT JOIN users ua ON ba.user_id = ua.user_id
+        WHERE b.requester_id = #{userId}
+        ORDER BY b.start_time DESC
+    </select>
+
+    <!-- Query: Finds all bookings with 'pending' status.
+         Includes room, requester, and attendee details. -->
+    <select id="findAllPending" resultMap="BookingDetailResultMap">
+        SELECT
+        b.booking_id, b.title, b.start_time, b.end_time, b.status, b.notes, b.created_at,
+        r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+        u.user_id as requester_id, u.full_name as requester_name, u.username as requester_username,
+        ba.user_id as attendee_user_id, ua.full_name as attendee_full_name, ua.username as attendee_username
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.room_id
+        JOIN users u ON b.requester_id = u.user_id
+        LEFT JOIN booking_attendees ba ON b.booking_id = ba.booking_id
+        LEFT JOIN users ua ON ba.user_id = ua.user_id
+        WHERE b.status = 'pending'
+        ORDER BY b.start_time ASC
+    </select>
+    <select id="findAllPendingByDepartment" resultMap="BookingDetailResultMap">
+        SELECT
+            b.booking_id, b.title, b.start_time, b.end_time, b.status, b.notes, b.created_at,
+            r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+            u.user_id as requester_id, u.full_name as requester_name, u.username as requester_username,
+            ba.user_id as attendee_user_id, ua.full_name as attendee_full_name, ua.username as attendee_username
+        FROM bookings b
+                 JOIN rooms r ON b.room_id = r.room_id
+                 JOIN users u ON b.requester_id = u.user_id
+                 LEFT JOIN booking_attendees ba ON b.booking_id = ba.booking_id
+                 LEFT JOIN users ua ON ba.user_id = ua.user_id
+        WHERE b.status = 'pending' AND u.department_id = #{adminDepartmentId}
+        ORDER BY b.start_time ASC
+    </select>
+
+    <!-- Dashboard Query: Counts the total number of bookings that have been processed (confirmed or rejected) today. -->
+    <select id="countTotalProcessedToday" resultType="int">
+        SELECT COUNT(*) FROM bookings WHERE status IN ('confirmed', 'rejected') AND DATE(created_at) = CURDATE()
+    </select>
+
+    <!-- Dashboard Query: Retrieves daily booking counts for the last 7 days. -->
+    <select id="getDailyBookingCounts" resultType="java.util.HashMap">
+        SELECT DATE(created_at) as date, COUNT(*) as count
+        FROM bookings
+        WHERE created_at >= CURDATE() - INTERVAL 7 DAY
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+    </select>
+    <!-- Admin Dashboard Query: Retrieves statistics for pending bookings -->
+    <select id="getPendingBookingStats" resultType="java.util.HashMap">
+        SELECT
+            COUNT(*) as count,
+            COALESCE(SUM(TIMESTAMPDIFF(HOUR, start_time, end_time)), 0) as total_hours
+        FROM bookings
+        WHERE status = 'pending'
+    </select>
+    <!-- Query: Finds a booking by its ID, including all associated details -->
+    <select id="findById" resultMap="BookingDetailResultMap">
+        SELECT
+            b.booking_id, b.title, b.start_time, b.end_time, b.status, b.notes, b.created_at,
+            r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+            u.user_id as requester_id, u.full_name as requester_name, u.username as requester_username,
+            ba.user_id as attendee_user_id, ua.full_name as attendee_full_name, ua.username as attendee_username
+        FROM bookings b
+                 JOIN rooms r ON b.room_id = r.room_id
+                 JOIN users u ON b.requester_id = u.user_id
+                 LEFT JOIN booking_attendees ba ON b.booking_id = ba.booking_id
+                 LEFT JOIN users ua ON ba.user_id = ua.user_id
+        WHERE b.booking_id = #{bookingId}
+    </select>
+    <select id="getConfirmedBookingsForToday" resultMap="BookingDetailResultMap">
+        SELECT * FROM bookings
+
+        WHERE status = 'confirmed'
+          AND DATE(start_time) = CURDATE()
+        ORDER BY start_time
+    </select>
+    <!-- Admin Dashboard Query: Retrieves recently processed bookings -->
+    <select id="findRecentProcessed" resultMap="BookingDetailResultMap">
+        SELECT
+            b.booking_id, b.title, b.start_time, b.end_time, b.status, b.notes, b.created_at,
+            r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+            u.user_id as requester_id, u.full_name as requester_name, u.username as requester_username,
+            ba.user_id as attendee_user_id, ua.full_name as attendee_full_name, ua.username as attendee_username
+        FROM bookings b
+                 JOIN rooms r ON b.room_id = r.room_id
+                 JOIN users u ON b.requester_id = u.user_id
+                 LEFT JOIN booking_attendees ba ON b.booking_id = ba.booking_id
+                 LEFT JOIN users ua ON ba.user_id = ua.user_id
+        WHERE b.status IN ('confirmed', 'rejected')
+        ORDER BY b.created_at DESC
+        LIMIT 10
+    </select>
+    <select id="findActiveBookings" resultMap="BookingDetailResultMap">
+        SELECT
+            b.booking_id, b.title, b.start_time, b.end_time, b.status, b.notes, b.created_at,
+            r.room_id, r.room_name, r.capacity, r.amenities, r.location_id,
+            u.user_id as requester_id, u.full_name as requester_name, u.username as requester_username
+        FROM bookings b
+                 JOIN rooms r ON b.room_id = r.room_id
+                 JOIN users u ON b.requester_id = u.user_id
+        WHERE b.status = 'confirmed'
+          AND NOW() BETWEEN b.start_time AND b.end_time
+        ORDER BY b.start_time ASC
+    </select>
+</mapper>
